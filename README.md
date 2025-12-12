@@ -1,65 +1,66 @@
 # Secure GenAI Gateway
 
-A robust, lightweight security proxy for Large Language Models (LLMs) built with **FastAPI**. This middleware sits between your client application and the LLM (e.g., Ollama, LocalAI), ensuring that all inputs are sanitized and validated before processing.
+A robust, enterprise-grade security proxy for Large Language Models (LLMs) built with **FastAPI**. It intercepts, sanitizes, and routes requests to multiple providers (OpenAI, Anthropic, Gemini, Grok) while providing real-time security visualization.
 
-## Key Features
+## 🚀 Key Features
 
-- **🛡️ PII Redaction**: Automatically detects and redacts sensitive information (Emails, Phone Numbers) from prompts before logging or forwarding.
-- **🚫 Injection Blocking**: Identifies and blocks common prompt injection and jailbreak attempts (e.g., "Ignore previous instructions").
-- **📝 Audit Logging**: Asynchronous, non-blocking logging of all requests, verdicts, and latency metrics to valid SQLite storage.
-- **⚡ High Performance**: Built on FastAPI and `httpx` for minimal latency overhead.
+- **🛡️ Real-time Guardrails**: 
+    - **PII Redaction**: Automatically detects and replaces sensitive info (Emails, Phones) with `<REDACTED>` tags.
+    - **Injection Blocking**: Stops jailbreak attempts (e.g., "Ignore previous instructions") instantly.
+- **⚡ Multi-Provider Routing**: Seamlessly route to OpenAI, Anthropic (Claude), Google (Gemini), xAI (Grok), or Local LLMs based on the model name.
+- **📊 Interactive Dashboard**:
+    - **Live Chat Interface**: Chat with any supported model.
+    - **Security Stream**: Watch requests get scanned and blocked in real-time.
+    - **Visual Feedback**: Premium toast notifications when PII is intercepted.
+- **📝 Audit Logging**: Asynchronous SQLite logging of every request, verdict, and latency.
 
-## Quick Start
+## 🛠️ Quick Start
 
 ### Prerequisites
 - Python 3.10+
-- A running local LLM (e.g., [Ollama](https://ollama.com/) at `http://localhost:11434`)
+- (Optional) API Keys for OpenAI/Anthropic/Gemini/Grok
 
 ### Installation
 
-1. Clone the repository and set up a virtual environment:
+1. **Clone & Setup**:
    ```bash
    git clone https://github.com/rarenicks/secure-llm-gateway.git
    cd secure-llm-gateway
    python3 -m venv venv
    source venv/bin/activate
-   ```
-
-2. Install dependencies:
-   ```bash
    pip install -r requirements.txt
    ```
 
-3. Configure environment:
-   The project comes with a default `.env` configuration. Ensure `TARGET_LLM_URL` points to your local model instance.
+2. **Configuration**:
+   Copy `.env` and add your keys:
+   ```env
+   OPENAI_API_KEY=sk-...
+   ANTHROPIC_API_KEY=sk-ant-...
+   ```
 
-### Running the Proxy
+3. **Run the Gateway**:
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port 8000
+   ```
 
-Start the server:
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
+### 🖥️ Dashboard
+Open **[http://localhost:8000](http://localhost:8000)** to access the Real-time Security Dashboard.
 
-The API is now available at `http://localhost:8000/v1/chat/completions`, mimicking the standard OpenAI API format.
+## 🧪 Verification
 
-## Verification
-
-A verification script is included to test the security guardrails.
-
+Run the automated test suite to verify routing and security logic:
 ```bash
 python verify_proxy.py
 ```
 
-This will run three automated tests:
-1.  **Safe Request**: Should pass through to the LLM.
-2.  **PII Request**: Should be processed but redacted in logs/upstream.
-3.  **Malicious Request**: Should be blocked immediately with a 400 error.
+## 📂 Architecture
 
-## Architecture
-
-- **`main.py`**: Core application logic and proxy handling.
-- **`guardrails_config.py`**: Configurable rules for PII and injection detection.
-- **`logger.py`**: Structured audit logging system.
+- **`app/main.py`**: Entry point & API routes.
+- **`app/core/`**:
+    - `guardrails.py`: Security engine (Regex/Heuristics).
+    - `router.py`: Intelligent provider routing.
+    - `logger.py`: Audit logging system.
+- **`app/static/`**: Frontend assets (HTML/CSS/JS).
 
 ## License
 
