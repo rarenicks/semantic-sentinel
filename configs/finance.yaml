@@ -1,0 +1,24 @@
+profile_name: "Finance_v1"
+detectors:
+  pii:
+    enabled: true
+    patterns: 
+      - "EMAIL"
+      - "PHONE"
+      - "SSN"
+      - "CREDIT_CARD"
+  injection:
+    enabled: true
+  secrets:
+    enabled: true
+  topics:
+    enabled: true
+    # Financial specific blocking
+    block_list: 
+      - "investment advice"
+      - "stock tip"
+      - "buy stock"
+      - "sell stock"
+      - "insider trading"
+      - "crypto"
+      - "bitcoin"

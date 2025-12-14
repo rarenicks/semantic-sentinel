@@ -1,0 +1,17 @@
+profile_name: "Default_v1"
+detectors:
+  pii:
+    enabled: true
+    patterns: 
+      - "EMAIL"
+      - "PHONE"
+      - "SSN"
+      - "CREDIT_CARD"
+  injection:
+    enabled: true
+    # Default keywords are used if list is empty/omitted
+  secrets:
+    enabled: true
+    # Default patterns used
+  topics:
+    enabled: false

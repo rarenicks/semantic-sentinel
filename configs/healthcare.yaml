@@ -1,0 +1,22 @@
+profile_name: "Healthcare_v1"
+detectors:
+  pii:
+    enabled: true
+    patterns: 
+      - "EMAIL"
+      - "PHONE"
+      - "SSN"
+  injection:
+    enabled: true
+  secrets:
+    enabled: true
+  topics:
+    enabled: true
+    # Medical specific blocking
+    block_list: 
+      - "diagnosis"
+      - "prescription"
+      - "medical advice"
+      - "take this medicine"
+      - "doctor"
+      - "patient"

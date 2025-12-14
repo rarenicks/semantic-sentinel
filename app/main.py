@@ -1,10 +1,12 @@
+import glob
 import os
 import time
 import httpx
 import sqlite3
 import json
+from pathlib import Path
 from typing import List, Optional, Dict, Any, Union
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Depends, Body
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -19,16 +21,30 @@ from app.core.adapters import APIAdapter
 # New Enterprise Library Imports
 from guardrails_lib.engine import GuardrailsEngine
 from guardrails_lib.core import GuardrailResult
-from examples.pii_guardrail import PIIGuardrail
-from examples.injection_guardrail import PromptInjectionGuardrail
-from examples.secret_guardrail import SecretDetectionGuardrail
+from guardrails_lib.factory import GuardrailsFactory
 
 # Load environment variables
 load_dotenv()
 
 TARGET_LLM_URL = os.getenv("TARGET_LLM_URL", "http://localhost:11434/v1/chat/completions")
 USE_MOCK_LLM = os.getenv("USE_MOCK_LLM", "False").lower() == "true"
+GUARDRAILS_PROFILE = os.getenv("GUARDRAILS_PROFILE", "configs/default.yaml")
+
 router = LLMRouter()
+
+# --- Helpers ---
+
+def load_available_profiles():
+    """Scans configs/ directory for yaml files."""
+    profiles = []
+    try:
+        files = glob.glob("configs/*.yaml")
+        for f in files:
+            name = Path(f).name
+            profiles.append({"name": name, "path": f})
+    except Exception as e:
+        print(f"Error loading profiles: {e}")
+    return profiles
 
 # --- Pydantic Models (OpenAI Compatible) ---
 
@@ -63,12 +79,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Enterprise GenAI Security Gateway", version="3.0.0", lifespan=lifespan)
 
-# Initialize Enterprise Guardrails
-guardrails = GuardrailsEngine(guardrails=[
-    PromptInjectionGuardrail(), # Run injection check first (blocking)
-    SecretDetectionGuardrail(), # Block secrets/keys (blocking)
-    PIIGuardrail()              # Then sanitize PII
-])
+# Initialize Enterprise Guardrails from Config Profile
+# This is the "Sentinel Framework" in action
+print(f"Server Startup: Loading Guardrails Profile from {GUARDRAILS_PROFILE}")
+guardrails = GuardrailsFactory.load_from_file(GUARDRAILS_PROFILE)
+
 
 http_client = httpx.AsyncClient()
 
@@ -78,6 +93,42 @@ def get_guardrails():
     return guardrails
 
 # --- API Endpoints ---
+
+@app.get("/api/profiles")
+async def get_profiles():
+    """Returns list of available profiles and the active one."""
+    global GUARDRAILS_PROFILE
+    available = load_available_profiles()
+    active_name = Path(GUARDRAILS_PROFILE).name
+    return {
+        "active_profile": active_name,
+        "profiles": available
+    }
+
+@app.post("/api/profiles/switch")
+async def switch_profile(data: Dict[str, str] = Body(...)):
+    """Switches the active guardrails profile."""
+    global guardrails, GUARDRAILS_PROFILE
+    
+    profile_name = data.get("profile_name")
+    if not profile_name:
+        raise HTTPException(status_code=400, detail="profile_name required")
+        
+    # Security: Ensure we only load from configs/ directory
+    safe_name = Path(profile_name).name
+    path = f"configs/{safe_name}"
+    
+    if not os.path.exists(path):
+         raise HTTPException(status_code=404, detail="Profile not found")
+         
+    try:
+        print(f"Switching Profile to: {path}")
+        new_engine = GuardrailsFactory.load_from_file(path)
+        guardrails = new_engine # Hot swap!
+        GUARDRAILS_PROFILE = path
+        return {"status": "success", "active_profile": safe_name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load profile: {str(e)}")
 
 @app.get("/api/logs")
 async def get_logs():
