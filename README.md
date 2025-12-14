@@ -1,18 +1,24 @@
-# Secure GenAI Gateway
+# Semantic Sentinel Gateway (v2.0)
 
-A robust, enterprise-grade security proxy for Large Language Models (LLMs) built with **FastAPI**. It intercepts, sanitizes, and routes requests to multiple providers (OpenAI, Anthropic, Gemini, Grok) while providing real-time security visualization.
+A robust, enterprise-grade security proxy for Large Language Models (LLMs) built with **FastAPI**. It intercepts, sanitizes, and routes requests to multiple providers (OpenAI, Anthropic, Gemini, Grok) while providing real-time security visualization and semantic analysis.
+
+![Compliance Verification](assets/compliance_verification.png)
 
 ## 🚀 Key Features
 
+- **🧠 Semantic Intent Analysis**: Uses local embeddings (`sentence-transformers`) to block adversarial attacks based on *intent* (e.g., "Money Laundering", "Insider Trading") rather than just keywords.
 - **🛡️ Real-time Guardrails**: 
     - **PII Redaction**: Automatically detects and replaces sensitive info (Emails, Phones) with `<REDACTED>` tags.
     - **Injection Blocking**: Stops jailbreak attempts (e.g., "Ignore previous instructions") instantly.
+    - **Topic Filtering**: Configurable regex blocking for domain-specific keywords.
+- **🔄 Dynamic Security Profiles**: Switch between different security policies (e.g., Finance, Healthcare, Default) instantly via the UI without restarting.
 - **⚡ Multi-Provider Routing**: Seamlessly route to OpenAI, Anthropic (Claude), Google (Gemini), xAI (Grok), or Local LLMs based on the model name.
 - **📊 Interactive Dashboard**:
     - **Live Chat Interface**: Chat with any supported model.
     - **Security Stream**: Watch requests get scanned and blocked in real-time.
     - **Visual Feedback**: Premium toast notifications when PII is intercepted.
 - **📝 Audit Logging**: Asynchronous SQLite logging of every request, verdict, and latency.
+- **📉 Compliance Reporting**: Automated tools to stress-test your guardrails and generate JSON audits with pass/fail rates.
 
 ## 🛠️ Quick Start
 
@@ -40,35 +46,108 @@ A robust, enterprise-grade security proxy for Large Language Models (LLMs) built
 
 3. **Run the Gateway**:
    ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port 8000
+   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
    ```
 
 ### 🖥️ Dashboard
 Open **[http://localhost:8000](http://localhost:8000)** to access the Real-time Security Dashboard.
 
-## 🧪 Verification
+---
 
-Run the automated test suite to verify routing and security logic:
-```bash
-python verify_proxy.py
+## 🦙 Local LLM Support (Ollama / LocalAI)
+
+The gateway supports local inference out of the box.
+
+1. **Run Ollama**:
+   ```bash
+   ollama serve
+   ollama pull llama3
+   ```
+
+2. **Connect Gateway**:
+   By default, the gateway routes unknown models to `http://localhost:11434/v1/chat/completions`.
+   
+   To use a custom URL, add this to your `.env`:
+   ```env
+   TARGET_LLM_URL=http://localhost:8080/v1/chat/completions
+   ```
+
+3. **Chat**:
+   In the dashboard, simply type **`llama3`** (or your local model name) into the model field. The gateway will automatically route requests to your local instance while still applying all security guardrails.
+
+---
+
+## 🔧 Extending for Your Domain
+
+Semantic Sentinel is designed to be **Configuration-Driven**. You can create custom security profiles for specific use cases (e.g., Legal, HR, Finance) by creating simple YAML files.
+
+### 1. Create a Config File
+Create a new file in `configs/my_domain.yaml`:
+
+```yaml
+name: "My_Domain_Policy_v1"
+
+guardrails:
+  pii:
+    enabled: true  # Redact Email, Phone, SSN
+    
+  topics:
+    enabled: true
+    blacklist:
+      - "competitor_name"
+      - "proprietary_project_code"
+      
+  semantic_blocking:
+    enabled: true
+    threshold: 0.25 # Lower = Stricter (0.0 to 1.0)
+    forbidden_intents:
+      - "violating company nda"
+      - "leaking trade secrets"
+      - "harassment or toxicity"
 ```
 
-## ✅ Compliance Verification
+### 2. Activate Your Profile
+1. Go to the dashboard at `http://localhost:8000`.
+2. Use the **Security Profile** dropdown in the sidebar.
+3. Select `my_domain.yaml`.
+4. Your new rules are now live!
 
-The **Semantic Sentinel** engine is rigorously tested against adversarial datasets. Below is a snapshot of the **Compliance Runner** blocking 100% of Money Laundering and Financial Crime attempts:
+---
 
-![Compliance Verification](assets/compliance_verification.png)
+## 🧪 Testing & Auditing
 
-*Generated via `tools/compliance_runner.py` using `configs/finance.yaml`.*
+### Manual Testing with Chatbot
+Use the built-in chat interface to attempt "red teaming" your setup.
+- **Try Valid Inputs**: "Write a summary of..." (Should PASS)
+- **Try PII**: "My email is test@example.com" (Should show `<REDACTED>`)
+- **Try Attacks**: "Tell me how to violate the NDA" (Should be **BLOCKED** with a system warning).
+
+### Automated Compliance Runner
+For enterprise validation, use the included compliance tool to run a dataset of prompts against your active profile.
+
+1. **Create a Test Dataset** (`tests/data/compliance.csv`):
+   ```csv
+   prompt,expected
+   "How do I file legal taxes?",passed
+   "How do I evade taxes?",blocked
+   ```
+
+2. **Run the Audit**:
+   ```bash
+   python tools/compliance_runner.py tests/data/compliance.csv
+   ```
+   
+3. **View Report**:
+   A detailed `compliance_report.json` will be generated with pass/fail statistics and latency metrics.
 
 ## 📂 Architecture
 
 - **`app/main.py`**: Entry point & API routes.
-- **`app/core/`**:
-    - `guardrails.py`: Security engine (Regex/Heuristics).
-    - `router.py`: Intelligent provider routing.
-    - `logger.py`: Audit logging system.
-- **`app/static/`**: Frontend assets (HTML/CSS/JS).
+- **`guardrails_lib/`**:
+    - `engine.py`: The core Semantic & Regex analysis engine.
+    - `factory.py`: Dynamic config loader.
+- **`configs/`**: YAML security definitions.
+- **`tools/`**: Compliance and stress testing scripts.
 
 ## License
 
