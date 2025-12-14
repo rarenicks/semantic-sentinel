@@ -210,3 +210,9 @@ __marimo__/
 # Local additions
 *.db
 .DS_Store
+server.log
+audit.db
+compliance_report.json
+venv/
+__pycache__/
+.DS_Store

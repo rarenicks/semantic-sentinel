@@ -69,19 +69,28 @@ class ChatCompletionRequest(BaseModel):
 
 # --- Lifespan Manager ---
 
+import sys
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    init_db()
+    try:
+        init_db()
+        print(f"Server Startup: Loading Guardrails Profile from {GUARDRAILS_PROFILE}")
+        # Validate Config Load
+        GuardrailsFactory.load_from_file(GUARDRAILS_PROFILE)
+    except Exception as e:
+        print(f"CRITICAL: Security Engine Connection Failed: {e}")
+        sys.exit(1)
+        
     yield
     # Shutdown
     pass
 
-app = FastAPI(title="Enterprise GenAI Security Gateway", version="3.0.0", lifespan=lifespan)
+app = FastAPI(title="Semantic Sentinel Gateway", version="3.1.0", lifespan=lifespan)
 
 # Initialize Enterprise Guardrails from Config Profile
 # This is the "Sentinel Framework" in action
-print(f"Server Startup: Loading Guardrails Profile from {GUARDRAILS_PROFILE}")
 guardrails = GuardrailsFactory.load_from_file(GUARDRAILS_PROFILE)
 
 

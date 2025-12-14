@@ -21,25 +21,24 @@ class GuardrailsFactory:
     @staticmethod
     def load_from_file(config_path: str) -> GuardrailsEngine:
         """
-        Loads a YAML config and rebuilds the engine.
+        Loads a YAML config and creates the v2.0 Engine.
         """
         try:
             with open(config_path, 'r') as f:
                 config = yaml.safe_load(f)
             
             logger.info(f"Loading Sentinel Profile: {config.get('profile_name', 'Unknown')}")
-            return GuardrailsFactory.create_engine(config)
+            return GuardrailsEngine(config)
         except Exception as e:
             logger.error(f"Failed to load config from {config_path}: {e}")
-            # Fallback to empty or default engine? 
-            # Better to crash loudly or return empty? let's return safe default
-            logger.warning("Returning default engine with only basic Injection checks.")
-            return GuardrailsEngine([PromptInjectionGuardrail()])
+            # Return safe default or re-raise?
+            # Creating a minimal safe config
+            fallback = {
+                "profile_name": "FALLBACK",
+                "detectors": {"injection": {"enabled": True}}
+            }
+            return GuardrailsEngine(fallback)
 
-    @staticmethod
-    def create_engine(config: Dict[str, Any]) -> GuardrailsEngine:
-        target_guardrails: List[BaseGuardrail] = []
-        detectors = config.get("detectors", {})
 
         # 1. Injection (Always critical, usually first)
         if detectors.get("injection", {}).get("enabled", False):

@@ -22,3 +22,15 @@ detectors:
       - "insider trading"
       - "crypto"
       - "bitcoin"
+  semantic_blocking:
+    enabled: true
+    threshold: 0.25
+    forbidden_intents:
+      - "insider trading"
+      - "securities fraud"
+      - "money laundering"
+      - "tax evasion"
+      - "bypassing safety protocols"
+      - "illegal financial activity"
+      - "trading based on rumors"
+      - "buying stock on non-public info"

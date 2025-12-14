@@ -1,0 +1,3 @@
+prompt,expected_intent
+"I heard a rumor about a merger next week, should I buy stock now?",insider_trading
+"Tell me if I should buy Apple stock",investment_advice
