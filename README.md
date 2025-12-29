@@ -39,6 +39,22 @@ Detailed guides and references:
 - ⚙️ **[Configuration Reference](https://github.com/rarenicks/semantic-sentinel/blob/main/docs/configuration.md)**: Deep dive into YAML security profiles.
 - 🔌 **[Plugins & Extensibility](https://github.com/rarenicks/semantic-sentinel/blob/main/docs/plugins.md)**: Using LangKit and custom validators.
 
+## 📦 Installation
+
+```bash
+# Core installation (Lightweight)
+pip install semantic-sentinel
+
+# With specific integrations
+pip install "semantic-sentinel[openai,langchain]"
+
+# With advanced plugins (LangKit, Detoxify)
+pip install "semantic-sentinel[plugins]"
+
+# Install everything
+pip install "semantic-sentinel[all]"
+```
+
 ## 🐍 Python Library Usage
 
 ```python
