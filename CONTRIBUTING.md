@@ -29,7 +29,7 @@ We use `pytest` for ensuring stability.
 
 ```bash
 # Run all tests
-./run_tests.sh
+./tools/run_tests.sh
 
 # Run specific plugin tests
 pytest tests/test_plugins.py

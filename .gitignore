@@ -216,3 +216,8 @@ compliance_report.json
 venv/
 __pycache__/
 .DS_Store
+
+# Internal/Debug Tools
+tools/debug_*.py
+tools/diagnose_*.py
+tools/report.html

@@ -6,7 +6,6 @@
 
 A production-ready, enterprise-grade security framework for Large Language Models (LLMs). Use it as a **Standalone Gateway** (Docker) or import it as a **Python Library** (`sentinel`) to build your own AI firewalls.
 
-![Security Stream](assets/security_stream_v5.png)
 
 ## 📚 Documentation
 
@@ -15,6 +14,7 @@ Detailed guides and references:
 - 🚀 **[Getting Started](https://github.com/rarenicks/semantic-sentinel/blob/main/docs/getting_started.md)**: Installation and quick start guide.
 - ⚙️ **[Configuration Reference](https://github.com/rarenicks/semantic-sentinel/blob/main/docs/configuration.md)**: Deep dive into YAML security profiles.
 - 🔌 **[Plugins & Extensibility](https://github.com/rarenicks/semantic-sentinel/blob/main/docs/plugins.md)**: Using LangKit and custom validators.
+![Semantic Sentinel Dashboard](assets/dashboard_blocked.png)
 
 ## 🐍 Python Library Usage
 
@@ -53,6 +53,7 @@ if not result.valid:
 - **Profile Inspector (ℹ️)**: Visualize active rules for any profile directly in the UI.
 - **Custom Profile Builder (+)**: Create, test, and save custom security configs (YAML) via the web interface.
 - **Live Audit Stream**: Watch requests get scanned, redacted, and blocked in real-time.
+
 
 ### 🔄 Dynamic Security Profiles
 Values encoded in **YAML** files. Switch policies instantly without restarts:

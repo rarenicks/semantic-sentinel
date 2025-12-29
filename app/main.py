@@ -30,46 +30,46 @@ load_dotenv()
 
 TARGET_LLM_URL = os.getenv("TARGET_LLM_URL", "http://localhost:11434/v1/chat/completions")
 USE_MOCK_LLM = os.getenv("USE_MOCK_LLM", "False").lower() == "true"
-GUARDRAILS_PROFILE = os.getenv("GUARDRAILS_PROFILE", "configs/default.yaml")
+GUARDRAILS_PROFILE = os.getenv("GUARDRAILS_PROFILE", "default")
 
 router = LLMRouter()
 
 # --- Helpers ---
 
 def load_available_profiles():
-    """Scans configs/ directory for yaml files and extracts metadata."""
+    """Scans sentinel/profiles/ directory for yaml files and extracts metadata."""
     profiles = []
-    try:
-        # Scan both base configs and custom folder
-        path_patterns = ["configs/*.yaml", "configs/custom/*.yaml"]
-        files = []
-        for pat in path_patterns:
-            files.extend(glob.glob(pat))
+    
+    # We scan the local source directory for simplicity in this dev mode
+    # In production installed mode, we might need importlib.resources traversal
+    base_dirs = ["sentinel/profiles", "sentinel/profiles/custom"]
+    
+    for base_dir in base_dirs:
+        if not os.path.exists(base_dir):
+            continue
             
-        for f in files:
-            name = Path(f).name
-            # Parse YAML for metadata
-            try:
-                with open(f, 'r') as stream:
-                    content = yaml.safe_load(stream) or {}
-                    
-                # Extract summary
-                description = content.get("description", "No description provided.")
-                detectors = content.get("detectors", {})
-                enabled_features = [k for k, v in detectors.items() if v.get("enabled", False)]
-                
-                profiles.append({
-                    "name": name, 
-                    "path": f,
-                    "description": description,
-                    "features": enabled_features,
-                    "raw_config": content
-                })
-            except Exception as e:
-                print(f"Skipping malformed config {f}: {e}")
-                
-    except Exception as e:
-        print(f"Error loading profiles: {e}")
+        for f in os.listdir(base_dir):
+            if f.endswith(".yaml"):
+                full_path = os.path.join(base_dir, f)
+                try:
+                    with open(full_path, "r") as yf:
+                        data = yaml.safe_load(yf) or {}
+                        name = f.replace(".yaml", "")
+                        
+                        # Extract features for UI
+                        detectors = data.get("detectors", {})
+                        enabled_features = [k for k, v in detectors.items() if v.get("enabled", False)]
+                        
+                        profiles.append({
+                            "name": data.get("profile_name", name),
+                            "path": full_path,
+                            "description": data.get("description", "No description provided."),
+                            "features": enabled_features,
+                            "raw_config": data,
+                            "is_custom": "custom" in base_dir
+                        })
+                except Exception as e:
+                    print(f"Failed to parse profile {f}: {e}")
     return profiles
 
 # --- Pydantic Models (OpenAI Compatible) ---
@@ -93,6 +93,9 @@ class ChatCompletionRequest(BaseModel):
     logit_bias: Optional[Dict[str, float]] = None
     user: Optional[str] = None
 
+class SwitchProfileRequest(BaseModel):
+    profile_name: str
+
 # --- Lifespan Manager ---
 
 import sys
@@ -104,7 +107,7 @@ async def lifespan(app: FastAPI):
         init_db()
         print(f"Server Startup: Loading Guardrails Profile from {GUARDRAILS_PROFILE}")
         # Validate Config Load
-        GuardrailsFactory.load_from_file(GUARDRAILS_PROFILE)
+        GuardrailsFactory.load(GUARDRAILS_PROFILE) # Changed to .load()
     except Exception as e:
         print(f"CRITICAL: Security Engine Connection Failed: {e}")
         sys.exit(1)
@@ -118,7 +121,7 @@ app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
 
 # Initialize Enterprise Guardrails from Config Profile
 # This is the "Sentinel Framework" in action
-guardrails = GuardrailsFactory.load_from_file(GUARDRAILS_PROFILE)
+guardrails = GuardrailsFactory.load(GUARDRAILS_PROFILE)
 
 
 http_client = httpx.AsyncClient()
