@@ -1,11 +1,19 @@
-# Secure GenAI Gateway & Sentinel Framework
+![Semantic Sentinel Banner](assets/semantic_sentinel_banner.png)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
-[![Package](https://img.shields.io/badge/pypi-v0.0.1-blue.svg)](https://pypi.org/project/semantic-sentinel/)
+<h1 align="center">Semantic Sentinel</h1>
+<p align="center">Enterprise-Grade Security Framework for Large Language Models</p>
 
-A production-ready, enterprise-grade security framework for Large Language Models (LLMs). Use it as a **Standalone Gateway** (Docker) or import it as a **Python Library** (`sentinel`) to build your own AI firewalls.
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://www.python.org/downloads/release/python-3100/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
+  <a href="https://pypi.org/project/semantic-sentinel/"><img src="https://img.shields.io/badge/pypi-v0.0.1-blue.svg" alt="Package"></a>
+</p>
 
+<p align="center">
+A production-ready, enterprise-grade security framework for Large Language Models (LLMs). Use it as a <strong>Standalone Gateway</strong> (Docker) or import it as a <strong>Python Library</strong> (<code>sentinel</code>) to build your own AI firewalls.
+</p>
+
+---
 
 ## 📚 Documentation
 
@@ -14,7 +22,6 @@ Detailed guides and references:
 - 🚀 **[Getting Started](https://github.com/rarenicks/semantic-sentinel/blob/main/docs/getting_started.md)**: Installation and quick start guide.
 - ⚙️ **[Configuration Reference](https://github.com/rarenicks/semantic-sentinel/blob/main/docs/configuration.md)**: Deep dive into YAML security profiles.
 - 🔌 **[Plugins & Extensibility](https://github.com/rarenicks/semantic-sentinel/blob/main/docs/plugins.md)**: Using LangKit and custom validators.
-![Semantic Sentinel Dashboard](assets/dashboard_blocked.png)
 
 ## 🐍 Python Library Usage
 
@@ -80,6 +87,16 @@ Values encoded in **YAML** files. Switch policies instantly without restarts:
 | | **Custom Builder** | Create and test new profiles directly in the UI. |
 
 ---
+
+---
+
+## 📸 Screenshots
+
+### Security Dashboard - Blocked Request
+![Dashboard showing blocked request](assets/dashboard_blocked.png)
+
+### Compliance Verification
+![Compliance verification results](assets/compliance_verification.png)
 
 ---
 
