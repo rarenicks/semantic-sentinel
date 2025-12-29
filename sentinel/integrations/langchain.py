@@ -4,7 +4,12 @@ from sentinel.engine import GuardrailsEngine
 try:
     from langchain_core.runnables import RunnableSerializable, RunnableConfig
     from langchain_core.messages import BaseMessage
-    from langchain_core.pydantic_v1 import Field
+    try:
+        # Try pydantic_v1 first (older LangChain versions)
+        from langchain_core.pydantic_v1 import Field
+    except ImportError:
+        # Fall back to standard pydantic (newer versions)
+        from pydantic import Field
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False

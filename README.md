@@ -56,8 +56,109 @@ result = engine.validate(input_text)
 
 if not result.valid:
     print(f"Blocked: {result.reason}")
-    # Output: Blocked: Semantic:Intent violation (0.85)
+    # Output: Blocked: Semantic:Intent violation (matched 'insider trading', score 0.85)
 ```
+
+### 🔄 Async Support
+
+```python
+import asyncio
+
+async def validate_concurrent():
+    engine = GuardrailsFactory.load("default")
+    
+    # Process multiple requests concurrently
+    tasks = [
+        engine.validate_async("What is AI?"),
+        engine.validate_async("My SSN is 123-45-6789"),
+    ]
+    
+    results = await asyncio.gather(*tasks)
+    return results
+
+asyncio.run(validate_concurrent())
+```
+
+### 🌊 Streaming Sanitization
+
+```python
+from sentinel.streaming import StreamSanitizer
+
+engine = GuardrailsFactory.load("finance")
+sanitizer = StreamSanitizer(engine)
+
+# Process streaming LLM output
+for token in llm_stream:
+    for safe_text in sanitizer.process(token):
+        print(safe_text, end="", flush=True)
+
+# Don't forget to flush!
+for safe_text in sanitizer.flush():
+    print(safe_text, end="")
+```
+
+---
+
+## 🔗 Framework Integrations
+
+### OpenAI Integration
+
+```python
+from sentinel.integrations.openai import SentinelAsyncOpenAI
+
+engine = GuardrailsFactory.load("finance")
+client = SentinelAsyncOpenAI(engine=engine, api_key=os.getenv("OPENAI_API_KEY"))
+
+# Automatic input validation and output sanitization
+response = await client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[{"role": "user", "content": "What is 2+2?"}],
+    stream=True  # Real-time streaming support!
+)
+
+async for chunk in response:
+    print(chunk.choices[0].delta.content, end="")
+```
+
+Install: `pip install semantic-sentinel[openai]`
+
+### LangChain Integration
+
+```python
+from sentinel.integrations.langchain import SentinelRunnable
+from langchain_openai import ChatOpenAI
+from langchain_core.runnables import RunnableLambda
+
+engine = GuardrailsFactory.load("finance")
+sentinel = SentinelRunnable(engine=engine)
+llm = ChatOpenAI()
+
+# Build chains with pipe syntax
+extract = RunnableLambda(lambda x: x['sanitized_text'])
+chain = sentinel | extract | llm
+
+result = chain.invoke("What is AI?")  # Validated before LLM!
+```
+
+Install: `pip install semantic-sentinel[langchain]`
+
+### LlamaIndex Integration (RAG)
+
+```python
+from sentinel.integrations.llamaindex import SentinelNodePostprocessor
+
+engine = GuardrailsFactory.load("finance")
+processor = SentinelNodePostprocessor(engine=engine)
+
+# Sanitize retrieved context in RAG pipelines
+query_engine = index.as_query_engine(
+    node_postprocessors=[processor]
+)
+
+response = query_engine.query("Tell me about our financial data")
+```
+
+Install: `pip install semantic-sentinel[llamaindex]`
 
 ---
 
@@ -70,10 +171,15 @@ if not result.valid:
     - **Regex Fallback**: High-speed pattern matching for Credit Cards, SSNs, and Phones.
 - **Injection & Jailbreak Defense**: Instantly blocks prompts like "Ignore previous instructions" or "DAN Mode".
 
-### 🔌 Extensibility & Plugins
-- **Plugin Architecture**: Extend functionality with Python plugins.
-    - **LangKit Integration**: Real-time toxicity scoring and injection analysis using `whylogs[langkit]`.
-    - **Custom Validators**: Write your own checks in `guardrails_lib/plugins/`.
+### 🔌 Extensibility & Integrations
+- **Framework Support**: Native integrations for OpenAI, LangChain, and LlamaIndex
+    - **OpenAI Wrapper**: Drop-in replacement for `openai.OpenAI` with automatic guardrails
+    - **LangChain Runnable**: Chain guardrails into your LangChain pipelines
+    - **LlamaIndex Postprocessor**: Sanitize RAG context before LLM processing
+- **Plugin Architecture**: Extend functionality with Python plugins
+    - **LangKit Integration**: Real-time toxicity scoring using `whylogs[langkit]`
+    - **Custom Validators**: Write your own checks in `sentinel/plugins/`
+- **Async/Streaming**: Full async support with `validate_async()` and `StreamSanitizer`
 
 ### 🎓 Educational UI & Experimentation
 - **Profile Inspector (ℹ️)**: Visualize active rules for any profile directly in the UI.
